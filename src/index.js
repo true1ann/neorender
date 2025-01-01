@@ -1,8 +1,8 @@
 class NeoRender {
   static components = {};
   static mountedComponents = {};
-  static version = 'NeoRender Sr1';
-  static verNum = 1;
+  static version = 'NeoRender Sr2';
+  static verNum = 2;
   static lastError = null;
   static lastWarn = null;
 
@@ -29,7 +29,7 @@ class NeoRender {
   static defineComponent(config) {
     try {
       if (!config.name || !config.template) {
-        this.errorEvent(new Error('Components must have a name and an HTML template.'));
+        this.errorEvent(new Error('Components must have a Name and a Template.'));
         return false;
       }
       this.components[config.name] = config;
@@ -40,7 +40,7 @@ class NeoRender {
     }
   }
 
-  static returnComponent(componentName, config) {
+  static returnComponent(componentName, config, env) {
     try {
       const component = this.components[componentName];
       if (!component) {
@@ -48,27 +48,38 @@ class NeoRender {
         return false;
       }
 
+      let componentConfig = { "useShadowRoot": true, "closeShadowRoot": false, "mountConfig": { "id": undefined, "className": undefined } }
+      if (typeof component.beforeCreate === 'function') {
+        const returnedConfig = component.beforeCreate(config, env);
+        componentConfig = { ...componentConfig, ...returnedConfig };
+      }
+
+      let componentRoot
       const container = document.createElement('div');
-      const shadowRoot = container.attachShadow({ mode: 'open' });
+      if (componentConfig.useShadowRoot) {
+        componentRoot = container.attachShadow({ mode: componentConfig.closeShadowRoot ? 'closed' : 'open' });
+      } else {
+        componentRoot = container;
+      }
 
-      shadowRoot.innerHTML = component.template;
+      if (componentConfig.mountConfig.id) container.id = componentConfig.mountConfig.id;
+      if (componentConfig.mountConfig.className) container.className = componentConfig.mountConfig.className;
 
-      if (component.scopedStyles) {
+      componentRoot.innerHTML = component.template;
+
+      if (component.scopedStyles && componentConfig.useShadowRoot) {
         const styleElement = document.createElement('style');
         styleElement.textContent = component.scopedStyles;
-        shadowRoot.appendChild(styleElement);
+        componentRoot.appendChild(styleElement);
       }
-
-      if (typeof component.beforeCreate === 'function') {
-        component.beforeCreate(shadowRoot, config);
-      }
+      if (component.scopedStyles && !componentConfig.useShadowRoot) this.warnEvent(`Component "${component.name}" has scopedStyles, but shadowRoot is disabled. scopedStyles will be ignored.`);
 
       if (typeof component.main === 'function') {
-        component.main(shadowRoot, config);
+        component.main(componentRoot, config);
       }
 
       if (typeof component.afterCreate === 'function') {
-        component.afterCreate(shadowRoot, config);
+        component.afterCreate(componentRoot, config);
       }
 
       return container;
@@ -100,7 +111,7 @@ class NeoRender {
         this.errorEvent(new Error(`Element ${selector} already has a component mounted to it: ${this.mountedComponents[selector]}`));
         return false;
       }
-      element.appendChild(await this.returnComponent(componentName, config));
+      element.appendChild(await this.returnComponent(componentName, config, {"type":"mount"}));
       this.mountedComponents[selector] = componentName;
       return true
     } catch (error) {
@@ -147,7 +158,7 @@ class NeoRender {
         this.errorEvent(new Error(`scriptMount is NOT meant to be executed in script, or console. use mount/returnComponent instead.`));
         return false
       }
-      const container = await this.returnComponent(componentName, config);
+      const container = await this.returnComponent(componentName, config, {"type":"scriptMount"});
       scriptTag.parentNode.replaceChild(container, scriptTag);
     } catch (error) {
       this.errorEvent(error);

@@ -33,24 +33,24 @@ jobs:
         VERSION=$(cat src/index.ts | grep 'static version' | sed -E "s/static version = '([^']*)';/\1/; s/^[ \t]+|[ \t]+$//g" | tr ' ' '_')
         echo "VERSION=${VERSION}" >> $GITHUB_ENV
 
-    - name: Create GitHub Release
-      if: success() && matrix.node-version == '22.x'
+    - name: Create Release
       id: create_release
-      uses: ncipollo/release-action@v1
+      uses: actions/create-release@v1.0.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag: ${{ env.VERSION }}_run{{ GITHUB_RUN_NUMBER }}
-        name: ${{ env.VERSION }}
+        tag_name: ${{ steps.extract_version.outputs.VERSION }}_run${{ github.run_number }}
+        release_name: ${{ steps.extract_version.outputs.VERSION }}_run${{ github.run_number }}
         draft: false
         prerelease: false
-        generateReleaseNotes: true
 
-    - name: Upload neorender.min.js
-      if: success() && matrix.node-version == '22.x'
-      uses: actions/upload-release-asset@v2
+    - name: Upload Release Asset
+      id: upload-release-asset 
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ./dist/bundle.js
         asset_name: neorender.min.js
         asset_content_type: application/javascript
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

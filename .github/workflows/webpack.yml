@@ -38,8 +38,8 @@ jobs:
       id: create_release
       uses: ncipollo/release-action@v1
       with:
-        tag: v${{ env.VERSION }}
-        name: Release ${{ env.VERSION }}
+        tag: ${{ env.VERSION }}_run{{ GITHUB_RUN_NUMBER }}
+        name: ${{ env.VERSION }}
         draft: false
         prerelease: false
         generateReleaseNotes: true

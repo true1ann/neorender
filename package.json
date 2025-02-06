@@ -2,20 +2,25 @@
   "name": "neorender",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/index.ts",
   "scripts": {
     "buildDev": "webpack --mode development",
     "buildProd": "webpack --mode production",
-    "watch": "webpack watch --mode development"
+    "watch": "webpack watch --mode development",
+    "devServer": "node server.js"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "true1ann",
+  "license": "MIT",
   "packageManager": "pnpm@9.14.2+sha512.6e2baf77d06b9362294152c851c4f278ede37ab1eba3a55fda317a4a17b209f4dbb973fb250a77abc463a341fcb1f17f17cfa24091c4eb319cda0d9b84278387",
   "dependencies": {
     "express": "^4.21.2"
   },
   "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.13.1",
+    "ts-loader": "^9.5.2",
+    "typescript": "^5.7.3",
     "webpack": "^5.97.1",
     "webpack-cli": "^5.1.4"
   }

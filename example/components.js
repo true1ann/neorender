@@ -1,8 +1,8 @@
-const component = {
+nr.defineComponent({
   name: 'TimeDisplay',
   template: '<div class="time"></div>',
   scopedStyles: `.time { color: red; font-size: 1.1em; }`,
-  main: function (container, config) {
+  main: function (container, config, env) {
     function updateTime() {
       const now = new Date();
       container.querySelector('.time').textContent = now.toLocaleTimeString();
@@ -10,7 +10,7 @@ const component = {
 
     updateTime();
     setInterval(updateTime, 500);
-    console.log('ive got this config:', config)
+    console.log('config:', config, 'env:', env)
   },
   beforeCreate: function (config, env) {
     console.log('I\'m getting created');
@@ -23,5 +23,13 @@ const component = {
   beforeDelete: function () {
     console.info('Im getting deleted')
   }
-}
-nr.defineComponent(component);
+});
+
+nr.defineComponent({
+  name: 'LazyLoadTest',
+  template: '<img style="height: 50vh">',
+  lazyLoad: function (shadowRoot, config) {
+    shadowRoot.querySelector('img').src = config
+    console.log('lazyLoad triggered')
+  }
+})

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NeoRender Testing unit</title>
+  <script src="/main.js"></script>
+</head>
+
+<body>
+  <div id="testing-unit"></div>
+  <script async>
+    nr.defineComponent({
+      name: "TESTINGUNIT",
+      template: "<div data-test='test'>TESTING UNIT</div><span></span>",
+      beforeCreate: function () {
+        console.log('beforeCreate')
+      },
+      main: function (shadowRoot, config, env) {
+        console.log('main')
+        shadowRoot.querySelector('[data-test="test"]').innerHTML = `config: ${config}, env: ${JSON.stringify(env)}, step: ${window.step}`;
+        console.log(`config: ${config}, env: ${env}`)
+      },
+      afterCreate: function () {
+        console.log('afterCreate')
+      },
+      beforeDelete: function () {
+        console.log('beforeDelete')
+      },
+      lazyLoad: function () {
+        console.log('lazyLoad')
+      }
+    });
+
+    window.step = 0
+    function pause(ms) {
+      window.step++
+      console.log(window.step)
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    (async function() {
+      try {
+        await nr.mount('TESTINGUNIT', '#testing-unit');
+        await pause(1000);
+        await nr.unmount('#testing-unit', 'TESTINGUNIT');
+        await pause(1000);
+        await nr.remount('#testing-unit', 'TESTINGUNIT');
+        await pause(1000);
+        await nr.remount('#testing-unit', 'TESTINGUNIT');
+        await pause(1000);
+        document.getElementById('testing-unit').innerHTML = 'Success.'
+      } catch (err){
+        await nr.unmount('#testing-unit');
+        document.getElementById('testing-unit').innerHTML = `Test failed. ${err}, ${window.step}`
+      }
+    })();
+  </script>
+</body>
+
+</html>

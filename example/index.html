@@ -7,22 +7,25 @@
   <title>NeoRender Example Component</title>
   <script src="main.js"></script>
   <!-- This is the NeoRender -->
-  <script>window.addEventListener('neoRenderError', (event) => { console.error('NeoRender Error:', event.detail) });</script>
-  <script>window.addEventListener('neoRenderWarn', (event) => { console.warn('NeoRender Warn:', event.detail) });</script>
-  <!-- For You to play around, so youd immidiatly know about everything -->
-  <script src="components/TimeDisplay.js"></script>
+  <script src="components.js"></script>
   <!-- Example component -->
 </head>
 
 <body>
-  <script async>nr.scriptMount('TimeDisplay')</script>
+  <div style="height: 101vh">
+    <script async>nr.scriptMount('TimeDisplay')</script>
 
-  <div id="app"></div>
-  <div class="time">Check devtools for useful info, also check ./components/TimeDisplay.js</div>
-  <!-- This is an other div example to showcase scoped styles -->
-  <!-- Try running `nr.mount('TimeDisplay', '#app')` -->
-
-  <script async>nr.scriptMount('TimeDisplay')</script>
+    <div id="app"></div>
+    <div class="time">Check devtools for useful info, also check ./components/TimeDisplay.js</div>
+    This is an other div example to showcase scoped styles
+    Try running `nr.mount('TimeDisplay', '#app')`
+  
+    <script async>nr.scriptMount('TimeDisplay')</script>
+    scroll down, theres a lazy loading component below.
+  </div>
+  <div id="lazyLoad"></div>
+  i couldnt think of anything else sorry
+  <script async>nr.mount('LazyLoadTest', '#lazyLoad', 'https://auns.maxy.top/profile.png')</script>
 </body>
 
 </html>

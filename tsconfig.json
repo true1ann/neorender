@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "es6", // or esnext
+    "module": "commonjs", // or esnext
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "./dist", // output directory for compiled files
+    "rootDir": "./src", // root directory of your source files
+    "allowJs": true,
+    "checkJs": false
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "**/*.spec.ts"]
+}

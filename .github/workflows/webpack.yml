@@ -1,0 +1,61 @@
+name: NodeJS with Webpack
+
+permissions:
+  contents: write
+  pull-requests: write
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [22.x]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: Build
+      run: |
+        npm install
+        npx webpack --mode production
+
+    - name: Extract version from file
+      id: extract_version
+      run: |
+        VERSION=$(cat ./src/.version | tr -d '\n')
+        echo "VERSION=${VERSION}" >> $GITHUB_ENV
+        echo "::set-output name=VERSION::${VERSION}"
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1.0.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.extract_version.outputs.VERSION }}_run${{ github.run_number }}
+        release_name: ${{ steps.extract_version.outputs.VERSION }}_run${{ github.run_number }}
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Asset
+      id: upload-release-asset 
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./dist/bundle.js
+        asset_name: neorender.min.js
+        asset_content_type: application/javascript

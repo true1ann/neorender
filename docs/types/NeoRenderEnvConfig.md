@@ -10,3 +10,7 @@ export interface NeoRenderEnvConfig {
   mountingTo: string | null  // null when this.type is 'scriptMount'. Selector used in mount
 }
 ```
+
+## Info
+- Type from `verNum` 3
+- Last updated in `verNum` 3

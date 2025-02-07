@@ -13,3 +13,7 @@ nr.untilVisible(string): Promise<boolean>
 ## Return
 `boolean`: `true`: component appeared on the viewwport  
 `boolean`: `false`: throws new Error
+
+## Info 
+- Exist since `verNum` 3
+- API from `verNum` 3

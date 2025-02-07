@@ -20,3 +20,4 @@ export interface NeoRenderComponentConfig {
 
 ## Info
 - Type from `verNum` 3
+- Last updated in `verNum` 3

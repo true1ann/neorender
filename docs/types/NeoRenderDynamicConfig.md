@@ -18,3 +18,4 @@ export interface NeoRenderDynamicConfig {
 
 ## Info
 - Type from `verNum` 3
+- Last updated in `verNum` 3

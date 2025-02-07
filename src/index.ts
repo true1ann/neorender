@@ -7,11 +7,17 @@ declare global {
   }
 }
 
+
+// TODO: refine error & warning messages
 class NeoRender {
   static components: { [key: string]: NeoRenderComponentConfig } = {};
   static mountedComponents: { [key: string]: string } = {};
-  static version = 'NeoRender Sr3';
-  static verNum = 3;
+// TODO: ^^^^^^^^^^^^^^^^^ 
+  // change this to NOT use an array and instead use [data-nr-mounted=true] and [data-nr-mounted-component-name=componentName]
+  // to allow query selectors based on the mounted component with built-in document.querySelector(All)
+  static componentSelectors: string[] = [];
+  static version = 'NeoRender Sr4';
+  static verNum = 4;
 
   static defineComponent(config: NeoRenderComponentConfig) {
     try {
@@ -27,20 +33,33 @@ class NeoRender {
     }
   }
 
-  static untilVisible(selector: string): Promise<boolean> {
-    return new Promise((resolve) => {
-      const element = document.querySelector(selector);
-      if (!element) {
-        throw new Error(`Element not found for selector: ${selector}`);
-        resolve(false);
-        return;
-      }
+  static async untilVisible(selector: string): Promise<boolean> {
+    const element = document.querySelector(selector);
+    if (!element) {
+      throw new Error(`Element not found for selector: ${selector}`);
+    }
+
+    function isVisible(sel: string): boolean {
+      const el = document.querySelector(sel) as HTMLElement;
+      if (!el) return false
+      const style = window.getComputedStyle(el);
+      return style.display !== 'none' && 
+        style.visibility !== 'hidden' && 
+        style.opacity !== '0'
+    }
   
+    return new Promise((resolve) => {
       const observer = new IntersectionObserver((entries: IntersectionObserverEntry[]) => {
         entries.forEach(entry => {
           if (entry.isIntersecting) {
             observer.unobserve(entry.target);
-            resolve(true);
+            const checkVisibility = async () => {
+              while (!isVisible(selector)) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+              }
+              resolve(true);
+            };
+            checkVisibility();
           }
         });
       }, {
@@ -51,8 +70,29 @@ class NeoRender {
   
       observer.observe(element);
     });
+  }  
+
+  static generateComponentId() {
+    const generateId = (): string => {
+      return [...Array(64)].map(() => 
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"[Math.floor(Math.random() * 62)]
+      ).join("");
+    };
+
+    let id: string;
+    do {
+      id = generateId();
+    } while (this.componentSelectors.includes(id));
+
+    id = `NRCID_${id}`
+
+    this.componentSelectors.push(id);
+    return id;
   }
-  
+
+  static findComponentById(id: string) {
+    return document.querySelector(`[data-nr-cid=${id}]`);
+  }
 
   static async returnComponent(componentName: string, config: any, env: NeoRenderEnvConfig): Promise<NeoRenderPreComponent | false> {
     try {
@@ -67,7 +107,7 @@ class NeoRender {
         "useShadowRoot": true, 
         "closeShadowRoot": false, 
         "mountConfig": { 
-          "id": `nr_${[...Array(64)].map(() => "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"[Math.random() * 62 | 0]).join("")}`,
+          "id": null,
           "className": null 
         }, 
         "lazyLoad": false 
@@ -76,6 +116,14 @@ class NeoRender {
       if (typeof component.beforeCreate === 'function') {
         const returnedConfig = component.beforeCreate(config, env);
         componentConfig = { ...componentConfig, ...returnedConfig };
+      }
+
+      if (componentConfig.lazyLoad) {
+        if (env.mountingTo) {
+          await this.untilVisible(env.mountingTo);
+        } else {
+          console.warn(`Component ${componentName} was probably mounted with nr.scriptMount(). Full lazyLoading IS NOT supported by nr.scriptMount()\nIf not, please leave an issue on GitHub`)
+        }
       }
 
       const container = document.createElement('div');
@@ -106,7 +154,9 @@ class NeoRender {
         component.main(componentRoot, config, env);
       }
 
-      return { context: componentRoot, config: componentConfig, root: container } as NeoRenderPreComponent;
+      const cid: string = this.generateComponentId()
+      container.setAttribute('data-nr-cid', cid);
+      return { context: componentRoot, config: componentConfig, root: container, nr: { cid: cid } } as NeoRenderPreComponent;
     } catch (err) {
       throw new Error(err as string);
       return false;
@@ -135,11 +185,9 @@ class NeoRender {
         throw new Error(`Element ${selector} already has a component mounted to it: ${this.mountedComponents[selector]}`);
         return false;
       }
-      
       const componentObj = await this.returnComponent(componentName, config, {"type":"mount", "mountingTo": selector}) as NeoRenderPreComponent;
 
       if (componentObj) {
-        if (componentObj.config.lazyLoad) await this.untilVisible(selector);
         element.appendChild(componentObj.root);
         this.mountedComponents[selector] = componentName;
       } else {
@@ -147,12 +195,12 @@ class NeoRender {
       }
 
       if (typeof component.afterCreate === 'function') {
-        component.afterCreate(document.querySelector(`#${componentObj.config.mountConfig.id }` || selector + ' > div')?.shadowRoot, config, {"type":"mount", "mountingTo": selector});
+        component.afterCreate(this.findComponentById(componentObj.nr.cid)?.shadowRoot, config, {"type":"mount", "mountingTo": selector});
       }
 
       if (typeof component.lazyLoad == 'function' && componentObj) {
-        await this.untilVisible(`#${componentObj.config.mountConfig.id }` || selector + ' > div');
-        component.lazyLoad(document.querySelector(`#${componentObj.config.mountConfig.id }` || selector + ' > div')?.shadowRoot, config, {"type":"mount", "mountingTo": selector})
+        await this.untilVisible(`[data-nr-cid=${componentObj.nr.cid}]`);
+        component.lazyLoad(this.findComponentById(componentObj.nr.cid)?.shadowRoot, config, {"type":"mount", "mountingTo": selector})
       }
 
       return true
@@ -164,16 +212,8 @@ class NeoRender {
 
   static remount(selector: string, componentName: string) {
     try {
-      const element = document.querySelector(selector);
-      if (element) {
-        element.innerHTML = '';
-      } else {
-        throw new Error(`Element ${selector} is not found.`);
-        return false;
-      }
-      if (componentName) {
-        delete this.mountedComponents[selector]
-      }
+      this.unmount(selector);
+      if (componentName) delete this.mountedComponents[selector]
       return this.mount(componentName || this.mountedComponents[selector], selector, null);
     } catch (err) {
       throw new Error(err as string);
@@ -187,7 +227,7 @@ class NeoRender {
       if (componentName) {
         const component = this.components[componentName];
         if (typeof component.beforeDelete === 'function') {
-          await component.beforeDelete.call(null);
+            await component.beforeDelete(document.querySelector(`${selector} > div`)?.shadowRoot);
         }
         const element = document.querySelector(selector);
         if (element) {
@@ -221,10 +261,6 @@ class NeoRender {
 
       const componentObj = await this.returnComponent(componentName, config, {"type":"scriptMount", "mountingTo": null} as NeoRenderEnvConfig) as NeoRenderPreComponent;
 
-      if (componentObj && componentObj.config.lazyLoad) {
-        console.warn(`Component ${componentName} tried to use full lazyLoading. it is NOT supported by nr.scriptMount`);
-      }
-
       if (scriptTag.parentNode && componentObj) {
         scriptTag.parentNode.replaceChild(componentObj.root, scriptTag);
       } else {
@@ -233,15 +269,11 @@ class NeoRender {
       }
 
       if (typeof component.afterCreate === 'function') {
-        component.afterCreate(document.querySelector(`#${componentObj.config.mountConfig.id }`)?.shadowRoot, config, {"type":"scriptMount", "mountingTo": undefined});
+        component.afterCreate(this.findComponentById(componentObj.nr.cid)?.shadowRoot, config, {"type":"scriptMount", "mountingTo": undefined});
       }
       if (typeof component.lazyLoad === 'function') {
-        if (componentObj.config.mountConfig.id) {
-          await this.untilVisible(componentObj.config.mountConfig.id);
-          component.lazyLoad(document.querySelector(`#${componentObj.config.mountConfig.id }`)?.shadowRoot, config, {"type":"scriptMount", "mountingTo": undefined});
-        } else {
-          console.warn(`Component ${componentName} has lazyLoad(), but doesn't have an beforeCreate().mountConfig.id.`);
-        }
+        await this.untilVisible(`[data-nr-cid=${componentObj.nr.cid}]`);
+        component.lazyLoad(this.findComponentById(componentObj.nr.cid)?.shadowRoot, config, {"type":"scriptMount", "mountingTo": undefined});
       }
     } catch (err) {
       throw new Error(err as string);

@@ -16,6 +16,7 @@ Functions:
 - [Mounting components with `<script>` tag](functions/nr.scriptMount.md)
 - [Unmounting components](functions/nr.unmount.md)
 - [Remounting components](functions/nr.remount.md)
+- [Finding components](functions/nr.findComponentById.md)
 
 Types:
 - [`NeoRenderDynamicConfig`](types/NeoRenderDynamicConfig.md)

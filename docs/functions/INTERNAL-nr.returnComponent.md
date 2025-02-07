@@ -14,3 +14,7 @@ nr.returnComponent(string, any, NeoRenderEnvConfig): Promise<NeoRenderPreCompone
 ## References
 3. [`NeoRenderEnvConfig` (type)](../types/NeoRenderEnvConfig.md)
 4. [`NeoRenderPreComponent` (INTERNAL, type)](../types/INTERNAL-NeoRenderPreComponent.md)
+
+## Info
+- Exists since `verNum` 1
+- API from `verNum` 3

@@ -28,4 +28,7 @@ export interface NeoRenderPreComponent {
   context: HTMLDivElement,
   root: HTMLDivElement | ShadowRoot,
   config: NeoRenderDynamicConfig
+  nr: {
+    cid: string
+  }
 }

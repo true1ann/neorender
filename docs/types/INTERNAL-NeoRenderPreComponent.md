@@ -8,9 +8,16 @@ export interface NeoRenderPreComponent {
   context: HTMLDivElement | ShadowRoot, // Context
   root: HTMLDivElement,                 // Contains renderred NeoRenderComponentConfig.template (1)
   config: NeoRenderDynamicConfig        // NeoRenderDynamicConfig (2)
+  nr: {
+    cid: string                         // Component ID
+  }
 }
 ```
 
 ## References
 1. [`NeoRenderComponentConfig` type](../types/NeoRenderComponentConfig.md)
 2. [`NeoRenderDynamicConfig` type](../types/NeoRenderDynamicConfig.md)
+
+## Info
+- Type from `verNum` 3
+- Last updated in `verNum` 4

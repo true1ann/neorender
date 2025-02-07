@@ -9,53 +9,80 @@
 </head>
 
 <body>
-  <div id="testing-unit"></div>
-  <script async>
+  <script>
     nr.defineComponent({
       name: "TESTINGUNIT",
       template: "<div data-test='test'>TESTING UNIT</div><span></span>",
-      beforeCreate: function () {
-        console.log('beforeCreate')
+      beforeCreate: function (config, env) {
+        console.log('[beforeCreate]')
+        console.log(`[beforeCreate] config: ${config}, env: ${JSON.stringify(env)}`)
       },
       main: function (shadowRoot, config, env) {
-        console.log('main')
-        shadowRoot.querySelector('[data-test="test"]').innerHTML = `config: ${config}, env: ${JSON.stringify(env)}, step: ${window.step}`;
-        console.log(`config: ${config}, env: ${env}`)
+        console.log('[main]')
+        shadowRoot.querySelector('[data-test="test"]').innerHTML = `[main] config: ${config}, env: ${JSON.stringify(env)}, step: ${window.step}`;
+        console.log(`[main] config: ${config}, env: ${JSON.stringify(env)}`)
       },
-      afterCreate: function () {
-        console.log('afterCreate')
+      afterCreate: function (shadowRoot, config, env) {
+        console.log('[afterCreate]')
+        shadowRoot.querySelector('[data-test="test"]').innerHTML = `[afterCreate] config: ${config}, env: ${JSON.stringify(env)}, step: ${window.step}`;
+        console.log(`[afterCreate] config: ${config}, env: ${JSON.stringify(env)}`)
       },
-      beforeDelete: function () {
-        console.log('beforeDelete')
+      beforeDelete: function (shadowRoot) {
+        console.log('[beforeDelete]')
+        shadowRoot.querySelector('[data-test="test"]').innerHTML = `[beforeDelete] step: ${window.step}`;
       },
-      lazyLoad: function () {
-        console.log('lazyLoad')
+      lazyLoad: function (shadowRoot, config, env) {
+        console.log('[lazyLoad]')
+        shadowRoot.querySelector('[data-test="test"]').innerHTML = `[lazyLoad] config: ${config}, env: ${JSON.stringify(env)}, step: ${window.step}`;
+        console.log(`[lazyLoad] config: ${config}, env: ${JSON.stringify(env)}`)
       }
     });
 
+    nr.defineComponent({
+      name: "LAZYTESTING",
+      template: '<img src="lazytest.jpg">',
+      beforeCreate() {
+        return { lazyLoad: true }
+      }
+    });
+
+    nr.defineComponent({
+      name: "LAZYTESTING2",
+      template: '<div>LAZYTEST2</div>',
+      beforeCreate() {
+        return { lazyLoad: true }
+      }
+    });
+  </script>
+  <div id="testing-unit"></div>
+  <div id="lazy-unit" style="display: none;"></div>
+  <script async>nr.scriptMount('LAZYTESTING2')</script>
+  <button onClick="document.querySelector('#lazy-unit').style.display = 'block'">Test lazy loading</button>
+  <script async>
     window.step = 0
     function pause(ms) {
       window.step++
-      console.log(window.step)
+      console.log(`[step] ${window.step}`)
       return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     (async function() {
       try {
-        await nr.mount('TESTINGUNIT', '#testing-unit');
+        await nr.mount('TESTINGUNIT', '#testing-unit', '[mount]');
         await pause(1000);
-        await nr.unmount('#testing-unit', 'TESTINGUNIT');
+        await nr.unmount('#testing-unit');
         await pause(1000);
-        await nr.remount('#testing-unit', 'TESTINGUNIT');
+        await nr.remount('#testing-unit', 'TESTINGUNIT', '[remount0]');
         await pause(1000);
-        await nr.remount('#testing-unit', 'TESTINGUNIT');
+        await nr.remount('#testing-unit', 'TESTINGUNIT', '[remount1]');
         await pause(1000);
         document.getElementById('testing-unit').innerHTML = 'Success.'
-      } catch (err){
-        await nr.unmount('#testing-unit');
+      } catch (err) {
         document.getElementById('testing-unit').innerHTML = `Test failed. ${err}, ${window.step}`
       }
     })();
+
+    nr.mount('LAZYTESTING', '#lazy-unit');
   </script>
 </body>
 

@@ -9,3 +9,7 @@ Following variables are oftenly used in Docs, such as `verNum`
 > `nr.mountedComponents > 'selector': 'component'`
 - `nr.version`: string, holds full version (`NeoRender XrY`, see [Versioning](versioning.md))
 - `nr.verNum`: Number, holds release number
+
+> [!WARNING]  
+> Internal
+- `nr.componentSelectors`: Array, holds CIDs

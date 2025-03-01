@@ -7,7 +7,6 @@ declare global {
   }
 }
 
-
 // TODO: refine error & warning messages
 class NeoRender {
   static components: { [key: string]: NeoRenderComponentConfig } = {};
@@ -16,8 +15,8 @@ class NeoRender {
   // change this to NOT use an array and instead use [data-nr-mounted=true] and [data-nr-mounted-component-name=componentName]
   // to allow query selectors based on the mounted component with built-in document.querySelector(All)
   static componentSelectors: string[] = [];
-  static version = 'NeoRender Sr4';
-  static verNum = 4;
+  static version = 'NeoRender Br5';
+  static verNum = 5;
 
   static defineComponent(config: NeoRenderComponentConfig) {
     try {
@@ -26,6 +25,10 @@ class NeoRender {
         return false;
       }
       this.components[config.name] = config;
+      Object.freeze(this.components[config.name]);
+      Object.defineProperty(this.components, config.name, {
+        configurable: false
+      });
       return true;
     } catch (err) {
       throw new Error(err as string);
@@ -102,15 +105,18 @@ class NeoRender {
         return false;
       }
 
+      const cid: string = this.generateComponentId()
+      env.cid = cid;
+
       let componentConfig: NeoRenderDynamicConfig
       componentConfig = { 
-        "useShadowRoot": true, 
-        "closeShadowRoot": false, 
-        "mountConfig": { 
-          "id": null,
-          "className": null 
+        useShadowRoot: true, 
+        closeShadowRoot: false, 
+        mountConfig: { 
+          id: null,
+          className: null 
         }, 
-        "lazyLoad": false 
+        lazyLoad: false 
       }
 
       if (typeof component.beforeCreate === 'function') {
@@ -154,7 +160,6 @@ class NeoRender {
         component.main(componentRoot, config, env);
       }
 
-      const cid: string = this.generateComponentId()
       container.setAttribute('data-nr-cid', cid);
       return { context: componentRoot, config: componentConfig, root: container, nr: { cid: cid } } as NeoRenderPreComponent;
     } catch (err) {
@@ -185,7 +190,7 @@ class NeoRender {
         throw new Error(`Element ${selector} already has a component mounted to it: ${this.mountedComponents[selector]}`);
         return false;
       }
-      const componentObj = await this.returnComponent(componentName, config, {"type":"mount", "mountingTo": selector}) as NeoRenderPreComponent;
+      const componentObj = await this.returnComponent(componentName, config, { type: "mount", mountingTo: selector, cid: null }) as NeoRenderPreComponent;
 
       if (componentObj) {
         element.appendChild(componentObj.root);
@@ -195,12 +200,12 @@ class NeoRender {
       }
 
       if (typeof component.afterCreate === 'function') {
-        component.afterCreate(this.findComponentById(componentObj.nr.cid)?.shadowRoot, config, {"type":"mount", "mountingTo": selector});
+        component.afterCreate(this.findComponentById(componentObj.nr.cid)?.shadowRoot, config, { type: "mount", mountingTo: selector, cid: componentObj.nr.cid } as NeoRenderEnvConfig);
       }
 
       if (typeof component.lazyLoad == 'function' && componentObj) {
         await this.untilVisible(`[data-nr-cid=${componentObj.nr.cid}]`);
-        component.lazyLoad(this.findComponentById(componentObj.nr.cid)?.shadowRoot, config, {"type":"mount", "mountingTo": selector})
+        component.lazyLoad(this.findComponentById(componentObj.nr.cid)?.shadowRoot, config, { type: "mount", mountingTo: selector, cid: componentObj.nr.cid } as NeoRenderEnvConfig)
       }
 
       return true
@@ -259,7 +264,7 @@ class NeoRender {
         return false;
       }
 
-      const componentObj = await this.returnComponent(componentName, config, {"type":"scriptMount", "mountingTo": null} as NeoRenderEnvConfig) as NeoRenderPreComponent;
+      const componentObj = await this.returnComponent(componentName, config, { type:"scriptMount", mountingTo: null } as NeoRenderEnvConfig) as NeoRenderPreComponent;
 
       if (scriptTag.parentNode && componentObj) {
         scriptTag.parentNode.replaceChild(componentObj.root, scriptTag);
@@ -269,11 +274,11 @@ class NeoRender {
       }
 
       if (typeof component.afterCreate === 'function') {
-        component.afterCreate(this.findComponentById(componentObj.nr.cid)?.shadowRoot, config, {"type":"scriptMount", "mountingTo": undefined});
+        component.afterCreate(this.findComponentById(componentObj.nr.cid)?.shadowRoot, config, { type:"scriptMount", mountingTo: null, cid: componentObj.nr.cid } as NeoRenderEnvConfig);
       }
       if (typeof component.lazyLoad === 'function') {
         await this.untilVisible(`[data-nr-cid=${componentObj.nr.cid}]`);
-        component.lazyLoad(this.findComponentById(componentObj.nr.cid)?.shadowRoot, config, {"type":"scriptMount", "mountingTo": undefined});
+        component.lazyLoad(this.findComponentById(componentObj.nr.cid)?.shadowRoot, config, { type:"scriptMount", mountingTo: null, cid: componentObj.nr.cid } as NeoRenderEnvConfig);
       }
     } catch (err) {
       throw new Error(err as string);

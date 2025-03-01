@@ -16,16 +16,19 @@
       beforeCreate: function (config, env) {
         console.log('[beforeCreate]')
         console.log(`[beforeCreate] config: ${config}, env: ${JSON.stringify(env)}`)
+        console.log(nr.findComponentById(env.cid));
       },
       main: function (shadowRoot, config, env) {
         console.log('[main]')
         shadowRoot.querySelector('[data-test="test"]').innerHTML = `[main] config: ${config}, env: ${JSON.stringify(env)}, step: ${window.step}`;
         console.log(`[main] config: ${config}, env: ${JSON.stringify(env)}`)
+        console.log(nr.findComponentById(env.cid));
       },
       afterCreate: function (shadowRoot, config, env) {
         console.log('[afterCreate]')
         shadowRoot.querySelector('[data-test="test"]').innerHTML = `[afterCreate] config: ${config}, env: ${JSON.stringify(env)}, step: ${window.step}`;
         console.log(`[afterCreate] config: ${config}, env: ${JSON.stringify(env)}`)
+        console.log(nr.findComponentById(env.cid));
       },
       beforeDelete: function (shadowRoot) {
         console.log('[beforeDelete]')
@@ -35,6 +38,7 @@
         console.log('[lazyLoad]')
         shadowRoot.querySelector('[data-test="test"]').innerHTML = `[lazyLoad] config: ${config}, env: ${JSON.stringify(env)}, step: ${window.step}`;
         console.log(`[lazyLoad] config: ${config}, env: ${JSON.stringify(env)}`)
+        console.log(nr.findComponentById(env.cid));
       }
     });
 
@@ -76,9 +80,9 @@
         await pause(1000);
         await nr.remount('#testing-unit', 'TESTINGUNIT', '[remount1]');
         await pause(1000);
-        document.getElementById('testing-unit').innerHTML = 'Success.'
+        document.getElementById('testing-unit').innerHTML += 'Success.'
       } catch (err) {
-        document.getElementById('testing-unit').innerHTML = `Test failed. ${err}, ${window.step}`
+        document.getElementById('testing-unit').innerHTML += `Test failed. ${err}, ${window.step}`
       }
     })();
 

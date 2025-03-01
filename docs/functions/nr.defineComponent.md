@@ -35,6 +35,9 @@ nr.defineComponent({
 });
 ```
 
+> [!WARNING]  
+> After defining a component, you cannot do ANYTHING with it. Deletion and modifications are blocked
+
 ## Usage
 ```ts
 nr.defineComponent(NeoRenderComponentConfig) // type (1)
@@ -42,6 +45,7 @@ nr.defineComponent(NeoRenderComponentConfig) // type (1)
 ```
 
 ## `beforeCreate`
+Since `verNum` 2, you can use `beforeCreate` to modify some properties of your component before adding it to the page
 ```js
 nr.defineComponent({
   ...

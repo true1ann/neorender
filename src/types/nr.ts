@@ -21,7 +21,8 @@ export interface NeoRenderDynamicConfig {
 
 export interface NeoRenderEnvConfig {
   type: string,
-  mountingTo: string | null
+  mountingTo: string | null,
+  cid: string | null
 }
 
 export interface NeoRenderPreComponent {

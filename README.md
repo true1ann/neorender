@@ -1,3 +1,7 @@
+# NeoRender's EOS
+> [!IMPORTANT]  
+> NeoRender is now obsolete because of the fact that i cant maintain or add any new features, and the goal 'to break nothing with each update'. This repo wont directly have a link to the alternative i am already developing/developed (because NeoRender is archived BEFORE the creation of the new alternative) so check my GitHub Profile, @true1ann. No more updates will be released to this repository. Thank you to all of you who used NeoRender
+
 # NeoRender
 > The better CSR.  
 - 🚀 Easy to learn, modern API
